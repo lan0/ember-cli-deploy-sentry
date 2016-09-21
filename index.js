@@ -135,7 +135,7 @@ module.exports = {
         return request({
           uri: this.baseUrl,
           method: 'POST',
-          auth: this.sentrySettings.auth,
+          auth: this.generateAuth(),
           json: true,
           body: {
             version: this.sentrySettings.release
@@ -193,13 +193,18 @@ module.exports = {
           knownLength: fileSize
         });
 
+        var formHeaders = {
+          protocol: 'https:',
+          host: host,
+          path: urlPath,
+        };
+        if (sentrySettings.bearerApiKey) {
+          formHeaders.headers = {'Authorization': 'Bearer ' + sentrySettings.bearerApiKey};
+        } else {
+          formHeaders.auth = sentrySettings.apiKey + ':';
+        }
         return new Promise(function(resolve, reject) {
-          formData.submit({
-            protocol: 'https:',
-            host: host,
-            path: urlPath,
-            auth: sentrySettings.apiKey + ':'
-          }, function(error, result) {
+          formData.submit(formHeaders, function(error, result) {
             if(error) {
               reject(error);
             }
